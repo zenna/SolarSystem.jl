@@ -8,7 +8,7 @@ using InteractiveUtils
 using Revise
 
 # ╔═╡ e6714650-7f95-11eb-131f-59c3d5f1919f
-using GLMakie, AbstractPlotting, Colors, FileIO
+using WGLMakie, AbstractPlotting, Colors, FileIO
 
 # ╔═╡ d8e66710-7fa2-11eb-108a-9b4940798246
 begin
@@ -48,35 +48,58 @@ end
 # ╔═╡ be4e263a-7f9e-11eb-3ac1-e791d0b6f87e
 abs_pos(body::Body) = abs_pos(body.dist_to_sun, body.phase)
 
+# ╔═╡ 9d3fa7c2-7fa8-11eb-1cdc-517777362a3a
+mercury = Body(2439.7,0.1,69.059e6)
+
+# ╔═╡ bcabefb0-7fa8-11eb-220b-4fed094e221f
+venus = Body(6051.8, 0.2, 108.87e6)
+
 # ╔═╡ 8effea2c-7f9d-11eb-0434-99749285b842
-earth = Body(6.36e3, 0.2, 148.41e6)
+earth = Body(6.36e3, 0.3, 148.41e6)
 
 # ╔═╡ 9237e558-7f9f-11eb-3fd2-9be5c7ebf90d
-mars = Body(3389.4, 0.6, 239.41e6)
+mars = Body(3389.4, 0.4, 239.41e6)
 
-# ╔═╡ 1b395122-7fa3-11eb-23bb-cf9a29cd27d2
-scene = Scene()
+# ╔═╡ 0d880270-7fa9-11eb-297a-3b2ce952fa33
+jupiter = Body(69911, 0.5, 759.5e6)
+
+# ╔═╡ 1c507e92-7fa9-11eb-393a-65742f2b78ab
+saturn = Body(58232, 0.6,1.4897e9 )
+
+# ╔═╡ 1deca260-7fa9-11eb-33a5-85ce58f5628a
+uranus = Body(25362, 0.7,2.9562e9 )
+
+# ╔═╡ 1ed1ab30-7fa9-11eb-0f92-f7935e71b1b3
+neptune = Body(24622, 0.8, 4.4757e9)
+
+# ╔═╡ 1f7e17ce-7fa9-11eb-3a45-7d411128e0ed
+pluto = Body(1188.3, 0.9, 5.9e9)
+
+# ╔═╡ 924bbaa0-7fa5-11eb-3396-1972470784d5
+sun = Body(696340, 0, 0)
+
+# ╔═╡ 0013cbb0-7fa9-11eb-0bdb-4f172162bf7b
+
+
+# ╔═╡ 934005b0-7fa5-11eb-2bd9-19b44bfb001f
+abs_pos(mars)
 
 # ╔═╡ 96a2f21c-7fa0-11eb-3ae8-8563b736b30e
-function plot_solar_system(bodies, scene = Scene())
+function plot_solar_system(bodies)
+   scene = Scene();
    for body in bodies
 		(x, y) = abs_pos(body)
-		s = Sphere(Point3f0(x, y, 0), body.radius*100)
-		@show body
-		println("")
-		scene = mesh!(scene, s, color=RGBf0(1, 0.7, 0.3))
+		s = Sphere(Point3f0(x, y, 0), body.radius*1000)
+		mesh!(scene, s, color=RGBf0(1, 0.7, 0.3))
 	end
 	scene
 end
 
 # ╔═╡ c3ca09d8-7fa0-11eb-17f8-cf753ad27443
-bodies = [mars, earth]
+bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto]
 
 # ╔═╡ 642873f2-7fa2-11eb-0756-55cbf93d273d
-mesh = plot_solar_system(bodies, scene)
-
-# ╔═╡ 7ddc0ba6-7fa2-11eb-1133-c91b4245a1eb
-scene
+plot_solar_system(bodies)
 
 # ╔═╡ a1cf8518-7fa2-11eb-1783-df1ff91cda12
 md"Example"
@@ -93,11 +116,19 @@ md"Example"
 # ╠═4aa60eb0-7f9d-11eb-24c7-bd6a81c79b66
 # ╠═acdd3c10-7f9e-11eb-15a1-fd2ee4f552c4
 # ╠═be4e263a-7f9e-11eb-3ac1-e791d0b6f87e
+# ╠═9d3fa7c2-7fa8-11eb-1cdc-517777362a3a
+# ╠═bcabefb0-7fa8-11eb-220b-4fed094e221f
 # ╠═8effea2c-7f9d-11eb-0434-99749285b842
 # ╠═9237e558-7f9f-11eb-3fd2-9be5c7ebf90d
-# ╠═1b395122-7fa3-11eb-23bb-cf9a29cd27d2
+# ╠═0d880270-7fa9-11eb-297a-3b2ce952fa33
+# ╠═1c507e92-7fa9-11eb-393a-65742f2b78ab
+# ╠═1deca260-7fa9-11eb-33a5-85ce58f5628a
+# ╠═1ed1ab30-7fa9-11eb-0f92-f7935e71b1b3
+# ╠═1f7e17ce-7fa9-11eb-3a45-7d411128e0ed
+# ╠═924bbaa0-7fa5-11eb-3396-1972470784d5
+# ╠═0013cbb0-7fa9-11eb-0bdb-4f172162bf7b
+# ╠═934005b0-7fa5-11eb-2bd9-19b44bfb001f
 # ╠═96a2f21c-7fa0-11eb-3ae8-8563b736b30e
 # ╠═c3ca09d8-7fa0-11eb-17f8-cf753ad27443
 # ╠═642873f2-7fa2-11eb-0756-55cbf93d273d
-# ╠═7ddc0ba6-7fa2-11eb-1133-c91b4245a1eb
 # ╠═a1cf8518-7fa2-11eb-1783-df1ff91cda12
