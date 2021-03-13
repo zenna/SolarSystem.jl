@@ -19,14 +19,23 @@ using Revise
 # ╔═╡ 3cb3a910-841c-11eb-3e4b-e131de172393
 using RayTrace
 
-# ╔═╡ e6714650-7f95-11eb-131f-59c3d5f1919f
-using WGLMakie, AbstractPlotting, Colors, FileIO
+# ╔═╡ c0cda830-8422-11eb-057e-dfe59b6dc3e7
+using Images
 
-# ╔═╡ d8e66710-7fa2-11eb-108a-9b4940798246
-begin
-	using JSServe
-	Page(exportable=true, offline=true)
-end 
+# ╔═╡ 385e2d70-8423-11eb-0260-31ee43d28996
+using RayTrace: Sphere, Vec3, FancySphere
+
+# ╔═╡ 41bd7830-8423-11eb-3484-97b9917ad76f
+using Colors
+
+# ╔═╡ 41bded60-8423-11eb-17e4-8bb3e0f75bc2
+using ImageView
+
+# ╔═╡ af6a7fd0-8429-11eb-1fd9-c17aeb584666
+using Rotations
+
+# ╔═╡ 3b2f98c2-842a-11eb-0dce-17cbba9c7a95
+using LinearAlgebra
 
 # ╔═╡ 57856634-7fad-11eb-3036-4d6a958e57a4
 using PlutoUI
@@ -34,17 +43,14 @@ using PlutoUI
 # ╔═╡ 89c59ea0-7faf-11eb-294c-41e589b29f49
 using Observables
 
-# ╔═╡ c61b7d78-7fa2-11eb-3317-27c52adcacd6
+# ╔═╡ 19d27d50-842a-11eb-02a4-0b8c337361bb
+cross([3, 3, 4], [1, 1, 6])
 
+# ╔═╡ 98109ad0-842a-11eb-0d89-b332dfd48be6
+[1. 0 0] *Rotations.AngleAxis(pi/4,0,0,1.)
 
 # ╔═╡ dfc383ca-7f9c-11eb-1cae-85de56d9cfb3
 md"# A Newtonion Universe"
-
-# ╔═╡ e9f7f20e-7f9c-11eb-3ab2-37fa0ecc4d97
-Position = Point3f0
-
-# ╔═╡ a3bcff66-7f9d-11eb-3264-91ba931fd331
-Vec2
 
 # ╔═╡ 4aa60eb0-7f9d-11eb-24c7-bd6a81c79b66
 struct Body
@@ -92,14 +98,34 @@ pluto = Body(1188.3, 0.9, 5.9e9,248,0)
 # ╔═╡ 924bbaa0-7fa5-11eb-3396-1972470784d5
 sun = Body(6963.40, 0, 0,1,0)
 
-# ╔═╡ 0013cbb0-7fa9-11eb-0bdb-4f172162bf7b
-
-
 # ╔═╡ 934005b0-7fa5-11eb-2bd9-19b44bfb001f
 abs_pos(mars)
 
-# ╔═╡ c3ca09d8-7fa0-11eb-17f8-cf753ad27443
-bodies = [sun, mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto]
+# ╔═╡ 2ae53030-842d-11eb-3d6e-8b9a3e595b73
+[3, 3, 4.].-[1., 1, 6]
+
+# ╔═╡ 42377ea2-842d-11eb-1eca-8980f8a0ff0a
+dot([3, 3, 4.],[1., 1, 6])
+
+# ╔═╡ ceac869e-842d-11eb-0e88-a3566bd1f4c1
+normalize(x) = x./sum(x)
+
+# ╔═╡ 53bf77a0-8427-11eb-0f30-c923d76cd874
+function reorient(old_position, new_orientation, new_origin)
+	new_position = old_position.-new_origin; 
+	theta = acos(dot(normalize([0,0,-1.]), normalize(new_orientation))); 
+	axis = cross([0,0,-1.], new_orientation);
+	if theta !=0
+		new_position = new_position'*Rotations.AngleAxis(-theta,axis[1], axis[2], axis[3])
+	end
+	new_position
+end
+
+# ╔═╡ 8914eed0-842c-11eb-328c-1b5c7f34e884
+reorient([0,0,-1.], [0,1.,0], [-1., 0, 0])
+
+# ╔═╡ a0988aa0-8425-11eb-3c2d-2306e2c20348
+
 
 # ╔═╡ be0c46f0-7fad-11eb-1bae-7d99544cc38c
 #bodies = [sun, earth, jupiter]
@@ -110,14 +136,14 @@ bodies = [sun, mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto]
 # ╔═╡ 8effea2c-7f9d-11eb-0434-99749285b842
 earth = Body(6.36e3, earth_years/365, 148.41e6,1,0)
 
+# ╔═╡ c3ca09d8-7fa0-11eb-17f8-cf753ad27443
+bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto]
+
 # ╔═╡ a1cf8518-7fa2-11eb-1783-df1ff91cda12
 md"Example"
 
 # ╔═╡ dc655d7e-7fb9-11eb-2b64-eda9e336b6cf
 import Pkg; Pkg.add("Observables")
-
-# ╔═╡ edcda480-841c-11eb-3070-89e70178d745
-Pkg.add("Revise")
 
 # ╔═╡ 91a21d94-7faf-11eb-152e-27a5d44edf9f
 # App() do session::Session
@@ -163,20 +189,6 @@ end
 # ╔═╡ 748f0ff0-7fd0-11eb-373b-a938bdb0b34c
 @bind earth_days PlutoUI.Slider(0:400)
 
-# ╔═╡ 96a2f21c-7fa0-11eb-3ae8-8563b736b30e
-function plot_solar_system(bodies)
-   scene = Scene();
-	for (i,body) in enumerate(bodies)
-		body_ = body_at_time(body, earth_days)
-		s = Sphere(abs_pos(body_), body_.radius*2000)
-		mesh!(scene, s, color=RGBf0(i/length(bodies), 0.7, 0.3))
-	end
-	scene
-end
-
-# ╔═╡ 642873f2-7fa2-11eb-0756-55cbf93d273d
-plot_solar_system(bodies)
-
 # ╔═╡ a0e57710-7fd0-11eb-0b93-5f7ca5ee8824
 begin
 	scene = Scene();
@@ -207,32 +219,77 @@ end
 # ╔═╡ 6f5a5c10-7fd0-11eb-1c69-eda6306bb53b
 
 
-# ╔═╡ 64904030-7fb5-11eb-1633-cf965f8bb5ac
-cam = cameracontrols(scene)
-cam.upvector[] = (0.0, 0.0, 1.0)
-cam.lookat[] = minimum(scene_limits(scene)) + dir_scaled
-cam.eyeposition[] = (cam.lookat[][1], cam.lookat[][2] + 6.3, cam.lookat[][3])
-cam.projectiontype[] = AbstractPlotting.Orthographic
-        update_cam!(scene, cam)
-        # stop scene display from centering, which would overwrite the camera paramter we just set
-        scene.center = false
-
-# ╔═╡ c5ef5690-7fbf-11eb-156b-f30ec4c5200e
-AbstractPlotting
-
 # ╔═╡ cd3da630-7fc0-11eb-27a6-294fdd05674c
+"Some example spheres which should create actual image"
+function example_spheres()
+  scene = [FancySphere(Float64[0.0, -10004, -20], 10000.0, Float64[0.20, 0.20, 0.20], 0.0, 0.0, Float64[0.0, 0.0, 0.0]),
+           FancySphere(Float64[0.0,      0, -20],     4.0, Float64[1.00, 0.32, 0.36], 1.0, 0.5, Float64[0.0, 0.0, 0.0]),
+           FancySphere(Float64[5.0,     -1, -15],     2.0, Float64[0.90, 0.76, 0.46], 1.0, 0.0, Float64[0.0, 0.0, 0.0]),
+           FancySphere(Float64[5.0,      0, -25],     3.0, Float64[0.65, 0.77, 0.97], 1.0, 0.0, Float64[0.0, 0.0, 0.0]),
+           FancySphere(Float64[-5.5,      0, -15],    3.0, Float64[0.90, 0.90, 0.90], 1.0, 0.0, Float64[0.0, 0.0, 0.0]),
+           # light (emission > 0)
+           FancySphere(Float64[0.0,     20.0, -30],  3.0, Float64[0.00, 0.00, 0.00], 0.0, 0.0, Float64[3.0, 3.0, 3.0])]
+  RayTrace.ListScene(scene)
+end
 
+# ╔═╡ 662b2f00-8423-11eb-246e-637ae0019720
+"Render an example scene and display it"
+function render_example_spheres()
+  scene = example_spheres()
+  RayTrace.render(scene;width=1000,height=1000)
+end
+
+# ╔═╡ 662bcb40-8423-11eb-22c2-11bc9a628f37
+"Create an rgb image from a 3D matrix (w, h, c)"
+function rgbimg(img)
+  w = size(img)[1]
+  h = size(img)[2]
+  clrimg = Array{Colors.RGB}(undef, w, h)
+  for i = 1:w
+    for j = 1:h
+      clrimg[i,j] = Colors.RGB(img[i,j,:]...)
+    end
+  end
+  clrimg
+end
+
+# ╔═╡ 96a2f21c-7fa0-11eb-3ae8-8563b736b30e
+function plot_solar_system(bodies)
+	scene = [FancySphere(Float64[0.0,     20.0, -30],  3.0, Float64[0.00, 0.00, 0.00], 0.0, 0.0, Float64[3.0, 3.0, 3.0])]
+	for (i,body) in enumerate(bodies)
+		scene = [scene; FancySphere(abs_pos(body), body.radius, Float64[0.20, 0.20, 0.20], 0.0, 0.0, Float64[0.0, 0.0, 0.0])]
+	end
+  rgbimg(RayTrace.render(RayTrace.ListScene(scene), width=1000,height=1000))
+end
+
+# ╔═╡ 0013cbb0-7fa9-11eb-0bdb-4f172162bf7b
+plot_solar_system(bodies)
+
+# ╔═╡ 642873f2-7fa2-11eb-0756-55cbf93d273d
+plot_solar_system(bodies)
+
+# ╔═╡ 6637d930-8423-11eb-2595-0357f562491c
+function show_img()
+  img_ = render_example_spheres()
+  img = rgbimg(img_)
+  ImageView.imshow(img)
+end
+
+# ╔═╡ 6435c7a0-8423-11eb-3598-e96296f2c8f3
+rgbimg(render_example_spheres())
 
 # ╔═╡ Cell order:
 # ╠═de698868-7f9b-11eb-16af-031849e1f8ac
-# ╠═edcda480-841c-11eb-3070-89e70178d745
 # ╠═3cb3a910-841c-11eb-3e4b-e131de172393
-# ╠═e6714650-7f95-11eb-131f-59c3d5f1919f
-# ╠═c61b7d78-7fa2-11eb-3317-27c52adcacd6
-# ╠═d8e66710-7fa2-11eb-108a-9b4940798246
-# ╠═dfc383ca-7f9c-11eb-1cae-85de56d9cfb3
-# ╠═e9f7f20e-7f9c-11eb-3ab2-37fa0ecc4d97
-# ╠═a3bcff66-7f9d-11eb-3264-91ba931fd331
+# ╠═c0cda830-8422-11eb-057e-dfe59b6dc3e7
+# ╠═385e2d70-8423-11eb-0260-31ee43d28996
+# ╠═41bd7830-8423-11eb-3484-97b9917ad76f
+# ╠═41bded60-8423-11eb-17e4-8bb3e0f75bc2
+# ╠═af6a7fd0-8429-11eb-1fd9-c17aeb584666
+# ╠═3b2f98c2-842a-11eb-0dce-17cbba9c7a95
+# ╠═19d27d50-842a-11eb-02a4-0b8c337361bb
+# ╠═98109ad0-842a-11eb-0d89-b332dfd48be6
+# ╟─dfc383ca-7f9c-11eb-1cae-85de56d9cfb3
 # ╠═4aa60eb0-7f9d-11eb-24c7-bd6a81c79b66
 # ╠═acdd3c10-7f9e-11eb-15a1-fd2ee4f552c4
 # ╠═be4e263a-7f9e-11eb-3ac1-e791d0b6f87e
@@ -248,8 +305,14 @@ AbstractPlotting
 # ╠═924bbaa0-7fa5-11eb-3396-1972470784d5
 # ╠═0013cbb0-7fa9-11eb-0bdb-4f172162bf7b
 # ╠═934005b0-7fa5-11eb-2bd9-19b44bfb001f
+# ╠═2ae53030-842d-11eb-3d6e-8b9a3e595b73
+# ╠═42377ea2-842d-11eb-1eca-8980f8a0ff0a
+# ╠═ceac869e-842d-11eb-0e88-a3566bd1f4c1
+# ╠═53bf77a0-8427-11eb-0f30-c923d76cd874
+# ╠═8914eed0-842c-11eb-328c-1b5c7f34e884
 # ╠═96a2f21c-7fa0-11eb-3ae8-8563b736b30e
 # ╠═c3ca09d8-7fa0-11eb-17f8-cf753ad27443
+# ╠═a0988aa0-8425-11eb-3c2d-2306e2c20348
 # ╠═be0c46f0-7fad-11eb-1bae-7d99544cc38c
 # ╠═642873f2-7fa2-11eb-0756-55cbf93d273d
 # ╠═57856634-7fad-11eb-3036-4d6a958e57a4
@@ -262,6 +325,8 @@ AbstractPlotting
 # ╠═748f0ff0-7fd0-11eb-373b-a938bdb0b34c
 # ╠═a0e57710-7fd0-11eb-0b93-5f7ca5ee8824
 # ╠═6f5a5c10-7fd0-11eb-1c69-eda6306bb53b
-# ╠═64904030-7fb5-11eb-1633-cf965f8bb5ac
-# ╠═c5ef5690-7fbf-11eb-156b-f30ec4c5200e
 # ╠═cd3da630-7fc0-11eb-27a6-294fdd05674c
+# ╠═662b2f00-8423-11eb-246e-637ae0019720
+# ╠═662bcb40-8423-11eb-22c2-11bc9a628f37
+# ╠═6637d930-8423-11eb-2595-0357f562491c
+# ╠═6435c7a0-8423-11eb-3598-e96296f2c8f3
