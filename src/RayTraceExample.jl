@@ -37,75 +37,70 @@ using Rotations
 # ╔═╡ 3b2f98c2-842a-11eb-0dce-17cbba9c7a95
 using LinearAlgebra
 
+# ╔═╡ bcb1c440-8457-11eb-2e53-3582a44f6eb7
+using GeometryBasics
+
+# ╔═╡ a451cf00-845a-11eb-119b-430a1ff3c687
+using UnicodePlots
+
 # ╔═╡ 57856634-7fad-11eb-3036-4d6a958e57a4
 using PlutoUI
-
-# ╔═╡ 89c59ea0-7faf-11eb-294c-41e589b29f49
-using Observables
-
-# ╔═╡ 19d27d50-842a-11eb-02a4-0b8c337361bb
-cross([3, 3, 4], [1, 1, 6])
-
-# ╔═╡ 98109ad0-842a-11eb-0d89-b332dfd48be6
-[1. 0 0] *Rotations.AngleAxis(pi/4,0,0,1.)
 
 # ╔═╡ dfc383ca-7f9c-11eb-1cae-85de56d9cfb3
 md"# A Newtonion Universe"
 
 # ╔═╡ 4aa60eb0-7f9d-11eb-24c7-bd6a81c79b66
 struct Body
-  radius::Float64
-  phase::Float64
-  dist_to_sun::Float64
-  earth_years_per_year::Float64
-  offset::Float64
+	radius::Float64
+	phase::Float64
+	dist_to_sun::Float64
+	earth_years_per_year::Float64
+	offset::Float64 # place holder, for not just input to body_at_time
+	orbit_around::Point3{Float64}
 end
 
 # ╔═╡ acdd3c10-7f9e-11eb-15a1-fd2ee4f552c4
-function abs_pos(dist_to_sun, phase)
+function abs_pos(dist_to_sun, phase, orbit_around)
   phase_2pi = phase * 2pi
   y, x = dist_to_sun .* sincos(phase_2pi)
-  return Point3{Float64}(x,y, 0)
+  return Point3{Float64}(x,y, 0) .+ orbit_around
 end
 
 # ╔═╡ be4e263a-7f9e-11eb-3ac1-e791d0b6f87e
-abs_pos(body::Body) = abs_pos(body.dist_to_sun, body.phase)
-
-# ╔═╡ 9d3fa7c2-7fa8-11eb-1cdc-517777362a3a
-mercury = Body(2439.7,0.1,69.059e6, 0.241,0)
-
-# ╔═╡ bcabefb0-7fa8-11eb-220b-4fed094e221f
-venus = Body(6051.8, 0.2, 108.87e6, 0.615, 0)
-
-# ╔═╡ 9237e558-7f9f-11eb-3fd2-9be5c7ebf90d
-mars = Body(3389.4, 0.4, 239.41e6,1.88,0)
-
-# ╔═╡ 0d880270-7fa9-11eb-297a-3b2ce952fa33
-jupiter = Body(69911, 0.5, 759.5e6, 11.86,0)
-
-# ╔═╡ 1c507e92-7fa9-11eb-393a-65742f2b78ab
-saturn = Body(58232, 0.6,1.4897e9,29.5,0)
-
-# ╔═╡ 1deca260-7fa9-11eb-33a5-85ce58f5628a
-uranus = Body(25362, 0.7,2.9562e9, 84,0)
-
-# ╔═╡ 1ed1ab30-7fa9-11eb-0f92-f7935e71b1b3
-neptune = Body(24622, 0.8, 4.4757e9,164.8,0)
-
-# ╔═╡ 1f7e17ce-7fa9-11eb-3a45-7d411128e0ed
-pluto = Body(1188.3, 0.9, 5.9e9,248,0)
+abs_pos(body::Body) = abs_pos(body.dist_to_sun, body.phase, body.orbit_around)
 
 # ╔═╡ 924bbaa0-7fa5-11eb-3396-1972470784d5
-sun = Body(6963.40, 0, 0,1,0)
+sun = Body(696340, 0, 0,1,0, [0.,0.,0.])
 
-# ╔═╡ 934005b0-7fa5-11eb-2bd9-19b44bfb001f
-abs_pos(mars)
+# ╔═╡ 9d3fa7c2-7fa8-11eb-1cdc-517777362a3a
+mercury = Body(2439.7,0.1,69.059e6, 0.241,0, abs_pos(sun))
 
-# ╔═╡ 2ae53030-842d-11eb-3d6e-8b9a3e595b73
-[3, 3, 4.].-[1., 1, 6]
+# ╔═╡ bcabefb0-7fa8-11eb-220b-4fed094e221f
+venus = Body(6051.8, 0.2, 108.87e6, 0.615, 0, abs_pos(sun))
 
-# ╔═╡ 42377ea2-842d-11eb-1eca-8980f8a0ff0a
-dot([3, 3, 4.],[1., 1, 6])
+# ╔═╡ 8effea2c-7f9d-11eb-0434-99749285b842
+earth = Body(6.36e3, 0., 148.41e6,1,0, abs_pos(sun))
+
+# ╔═╡ 36abaa90-8467-11eb-1301-fb7831fe8830
+earth_moon = Body(1737.1, 0., 384400, 27.3/365, 0, abs_pos(earth))
+
+# ╔═╡ 9237e558-7f9f-11eb-3fd2-9be5c7ebf90d
+mars = Body(3389.4, 0.4, 239.41e6,1.88,0, abs_pos(sun))
+
+# ╔═╡ 0d880270-7fa9-11eb-297a-3b2ce952fa33
+jupiter = Body(69911, 0.5, 759.5e6, 11.86,0, abs_pos(sun))
+
+# ╔═╡ 1c507e92-7fa9-11eb-393a-65742f2b78ab
+saturn = Body(58232, 0.6,1.4897e9,29.5,0, abs_pos(sun))
+
+# ╔═╡ 1deca260-7fa9-11eb-33a5-85ce58f5628a
+uranus = Body(25362, 0.7,2.9562e9, 84,0, abs_pos(sun))
+
+# ╔═╡ 1ed1ab30-7fa9-11eb-0f92-f7935e71b1b3
+neptune = Body(24622, 0.8, 4.4757e9,164.8,0, abs_pos(sun))
+
+# ╔═╡ 1f7e17ce-7fa9-11eb-3a45-7d411128e0ed
+pluto = Body(1188.3, 0.9, 5.9e9,248,0, abs_pos(sun))
 
 # ╔═╡ ceac869e-842d-11eb-0e88-a3566bd1f4c1
 normalize(x) = x./sum(x)
@@ -113,131 +108,80 @@ normalize(x) = x./sum(x)
 # ╔═╡ 53bf77a0-8427-11eb-0f30-c923d76cd874
 function reorient(old_position, new_orientation, new_origin)
 	new_position = old_position.-new_origin; 
-	theta = acos(dot(normalize([0,0,-1.]), normalize(new_orientation))); 
-	axis = cross([0,0,-1.], new_orientation);
+	old_orientation = [0,0,-1.];
+	theta = acos(dot(normalize(old_orientation), normalize(new_orientation))); 
+	axis = cross(old_orientation, new_orientation);
 	if theta !=0
 		new_position = new_position'*Rotations.AngleAxis(-theta,axis[1], axis[2], axis[3])
 	end
 	new_position
 end
 
-# ╔═╡ 8914eed0-842c-11eb-328c-1b5c7f34e884
-reorient([0,0,-1.], [0,1.,0], [-1., 0, 0])
-
-# ╔═╡ a0988aa0-8425-11eb-3c2d-2306e2c20348
-
-
-# ╔═╡ be0c46f0-7fad-11eb-1bae-7d99544cc38c
-#bodies = [sun, earth, jupiter]
-
-# ╔═╡ 6e8f3936-7fad-11eb-0d65-07026d17bfff
-@bind earth_years PlutoUI.Slider(1:365) 
-
-# ╔═╡ 8effea2c-7f9d-11eb-0434-99749285b842
-earth = Body(6.36e3, earth_years/365, 148.41e6,1,0)
-
 # ╔═╡ c3ca09d8-7fa0-11eb-17f8-cf753ad27443
 bodies = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto]
-
-# ╔═╡ a1cf8518-7fa2-11eb-1783-df1ff91cda12
-md"Example"
-
-# ╔═╡ dc655d7e-7fb9-11eb-2b64-eda9e336b6cf
-import Pkg; Pkg.add("Observables")
-
-# ╔═╡ 91a21d94-7faf-11eb-152e-27a5d44edf9f
-# App() do session::Session
-#     index_slider = JSServe.Slider(0:5:365)
-# 	earth_days = Node(0)
-# 	scene = Scene()
-# 	function body_at_time(body, t)
-# 		body_ = Body(body.radius, t / 365 /body.earth_years_per_year + body.offset, body.dist_to_sun, body.earth_years_per_year, body.offset)
-# 	end
-# 	for (i,body) in enumerate(bodies)
-# 		body_ = @lift body_at_time(body, $earth_days)
-# 		s = @lift Sphere(abs_pos($body_), body.radius*2000)
-# 		mesh!(scene, s, color=RGBf0(i/10, 0.7, 0.3))
-# 	end
-
-# 	# set camera
-# 	earth_ = @lift body_at_time(earth, $earth_days)
-# 	eyeposition = @lift (abs_pos($earth_) .+ [1.1*earth.radius,0,0]); 
-# 	jupiter_ = @lift body_at_time(jupiter, $earth_days);
-# 	lookat = @lift abs_pos($jupiter_); 
-# 	upvector = [0.0, 0.0, 1.0]; 
-# 	#update_cam!(scene, eyeposition, [0.0, 0.0, 0.0], upvector)
-# 	@lift update_cam!(scene, $eyeposition, $lookat);#, upvector)
-#         # stop scene display from centering, which would overwrite the camera paramter we just set
-# 	scene.center = false
-# 	scene
-	
-# 	on(index_slider) do idx
-# 		ey = idx/365
-# 		@show eyeposition[]
-# 		@show lookat[]
-# 		earth_days[] = idx
-# 	end
-# 	slider = DOM.div("z-index: ", index_slider, index_slider.value)
-#     return JSServe.record_states(session, DOM.div(slider, scene))
-# end
-
-# ╔═╡ 90974550-7fd0-11eb-081a-6b1ac49e8d6c
-function body_at_time(body, t)
-		body_ = Body(body.radius/1e6, t / 365 /body.earth_years_per_year + body.offset, body.dist_to_sun/1e6, body.earth_years_per_year, body.offset)
-end
 
 # ╔═╡ 748f0ff0-7fd0-11eb-373b-a938bdb0b34c
 @bind earth_days PlutoUI.Slider(0:400)
 
-# ╔═╡ a0e57710-7fd0-11eb-0b93-5f7ca5ee8824
-begin
-	scene = Scene();
+# ╔═╡ 0a6e73f0-846b-11eb-2623-bdbbd52c7343
+@bind moon_offset PlutoUI.Slider(0:.01:1)
+
+# ╔═╡ 90974550-7fd0-11eb-081a-6b1ac49e8d6c
+function body_at_time(body, t)
+		body_ = Body(body.radius, t / 365 /body.earth_years_per_year + body.offset, body.dist_to_sun, body.earth_years_per_year, body.offset, body.orbit_around)
+end
+
+# ╔═╡ 90190350-845f-11eb-2012-eb0a61802819
+earth_at_time = body_at_time(earth,earth_days)
+
+# ╔═╡ edb3a450-8452-11eb-0911-bf1caf847ea6
+new_orientation = (abs_pos(earth_at_time).-abs_pos(sun) )
+
+# ╔═╡ 3e532340-8453-11eb-250e-a113554ff009
+new_origin = abs_pos(earth_at_time) 
+
+# ╔═╡ 3b95aff0-845e-11eb-254f-5fd0c4ecdac2
+reorient(abs_pos(sun), new_orientation, new_origin)
+
+# ╔═╡ 04b712a0-8457-11eb-24cb-d7e976cc0825
+new_position = reorient(abs_pos(sun), new_orientation, new_origin)
+
+# ╔═╡ 96a2f21c-7fa0-11eb-3ae8-8563b736b30e
+function plot_solar_system(bodies)
+	scene = []
 	for (i,body) in enumerate(bodies)
-		body_ = body_at_time(body, earth_days)
-		s = Sphere(abs_pos(body_), body_.radius*2000)
-		mesh!(scene, s, color=RGBf0(i/length(bodies), 0.7, 0.3))
+		new_position = reorient(abs_pos(body), new_orientation, new_origin)[:]
+		if (i==1) #| (i==length(bodies))
+			scene = [FancySphere(new_position, 
+										body.radius, 
+										Float64[1., 1., 0.0], 
+										0.0, 
+										0.0, 
+										Float64[3.0, 3.0, 3.0])]
+		else
+			scene = [scene; FancySphere(new_position, 
+										body.radius*800, 
+										Float64[0.20, 0.20, 0.20], 
+										0.0, 
+										0.0, 
+										Float64[0.0, 0.0, 0.0])]
+		end
 	end
-	cam = cameracontrols(scene);
-
-	# set camera
-	earth_ = body_at_time(earth, earth_days)
-	cam.eyeposition[] = (abs_pos(earth_) .+ [0000*earth_.radius,1*earth_.radius,0000*earth_.radius]); 
-
-	jupiter_ = body_at_time(jupiter, earth_days);
-	cam.lookat[] = abs_pos(jupiter_); 
-	upvector = [0.0, 0.0, 1.0]; 
-	#update_cam!(scene, eyeposition, [0.0, 0.0, 0.0], upvector)
-	update_cam!(scene, cam);#, upvector)
-        # stop scene display from centering, which would overwrite the camera paramter we just set
-	@show abs_pos(earth_)
-	cam = cameracontrols(scene);
-	@show cam.eyeposition
-	scene.center = false
-	scene
+  RayTrace.render(RayTrace.ListScene(scene); width=500,height=500)#, trc=RayTrace.trcdepth)
 end
 
-# ╔═╡ 6f5a5c10-7fd0-11eb-1c69-eda6306bb53b
-
-
-# ╔═╡ cd3da630-7fc0-11eb-27a6-294fdd05674c
-"Some example spheres which should create actual image"
-function example_spheres()
-  scene = [FancySphere(Float64[0.0, -10004, -20], 10000.0, Float64[0.20, 0.20, 0.20], 0.0, 0.0, Float64[0.0, 0.0, 0.0]),
-           FancySphere(Float64[0.0,      0, -20],     4.0, Float64[1.00, 0.32, 0.36], 1.0, 0.5, Float64[0.0, 0.0, 0.0]),
-           FancySphere(Float64[5.0,     -1, -15],     2.0, Float64[0.90, 0.76, 0.46], 1.0, 0.0, Float64[0.0, 0.0, 0.0]),
-           FancySphere(Float64[5.0,      0, -25],     3.0, Float64[0.65, 0.77, 0.97], 1.0, 0.0, Float64[0.0, 0.0, 0.0]),
-           FancySphere(Float64[-5.5,      0, -15],    3.0, Float64[0.90, 0.90, 0.90], 1.0, 0.0, Float64[0.0, 0.0, 0.0]),
-           # light (emission > 0)
-           FancySphere(Float64[0.0,     20.0, -30],  3.0, Float64[0.00, 0.00, 0.00], 0.0, 0.0, Float64[3.0, 3.0, 3.0])]
-  RayTrace.ListScene(scene)
+# ╔═╡ e7ce1500-8468-11eb-2fac-31d121fabb96
+begin
+	earth_moon_ = Body(earth_moon.radius*10, moon_offset, earth_moon.dist_to_sun, earth_moon.earth_years_per_year, moon_offset, abs_pos(earth_at_time))
+	@show abs_pos(body_at_time(earth_moon_, earth_days))-abs_pos(earth_at_time)
+	newbodies = [body_at_time.(bodies,earth_days); earth_moon_]
 end
 
-# ╔═╡ 662b2f00-8423-11eb-246e-637ae0019720
-"Render an example scene and display it"
-function render_example_spheres()
-  scene = example_spheres()
-  RayTrace.render(scene;width=1000,height=1000)
-end
+# ╔═╡ c2eaa4e0-845b-11eb-1695-33032a7d2af3
+im = plot_solar_system(newbodies);
+
+# ╔═╡ 642873f2-7fa2-11eb-0756-55cbf93d273d
+UnicodePlots.histogram(filter(x -> ((x!=0.0)), im[:]));
 
 # ╔═╡ 662bcb40-8423-11eb-22c2-11bc9a628f37
 "Create an rgb image from a 3D matrix (w, h, c)"
@@ -253,20 +197,8 @@ function rgbimg(img)
   clrimg
 end
 
-# ╔═╡ 96a2f21c-7fa0-11eb-3ae8-8563b736b30e
-function plot_solar_system(bodies)
-	scene = [FancySphere(Float64[0.0,     20.0, -30],  3.0, Float64[0.00, 0.00, 0.00], 0.0, 0.0, Float64[3.0, 3.0, 3.0])]
-	for (i,body) in enumerate(bodies)
-		scene = [scene; FancySphere(abs_pos(body), body.radius, Float64[0.20, 0.20, 0.20], 0.0, 0.0, Float64[0.0, 0.0, 0.0])]
-	end
-  rgbimg(RayTrace.render(RayTrace.ListScene(scene), width=1000,height=1000))
-end
-
-# ╔═╡ 0013cbb0-7fa9-11eb-0bdb-4f172162bf7b
-plot_solar_system(bodies)
-
-# ╔═╡ 642873f2-7fa2-11eb-0756-55cbf93d273d
-plot_solar_system(bodies)
+# ╔═╡ b7623890-845b-11eb-2ec1-77feffe75f65
+rgbimg(im)
 
 # ╔═╡ 6637d930-8423-11eb-2595-0357f562491c
 function show_img()
@@ -274,9 +206,6 @@ function show_img()
   img = rgbimg(img_)
   ImageView.imshow(img)
 end
-
-# ╔═╡ 6435c7a0-8423-11eb-3598-e96296f2c8f3
-rgbimg(render_example_spheres())
 
 # ╔═╡ Cell order:
 # ╠═de698868-7f9b-11eb-16af-031849e1f8ac
@@ -287,46 +216,39 @@ rgbimg(render_example_spheres())
 # ╠═41bded60-8423-11eb-17e4-8bb3e0f75bc2
 # ╠═af6a7fd0-8429-11eb-1fd9-c17aeb584666
 # ╠═3b2f98c2-842a-11eb-0dce-17cbba9c7a95
-# ╠═19d27d50-842a-11eb-02a4-0b8c337361bb
-# ╠═98109ad0-842a-11eb-0d89-b332dfd48be6
+# ╠═bcb1c440-8457-11eb-2e53-3582a44f6eb7
+# ╠═a451cf00-845a-11eb-119b-430a1ff3c687
+# ╠═57856634-7fad-11eb-3036-4d6a958e57a4
 # ╟─dfc383ca-7f9c-11eb-1cae-85de56d9cfb3
 # ╠═4aa60eb0-7f9d-11eb-24c7-bd6a81c79b66
 # ╠═acdd3c10-7f9e-11eb-15a1-fd2ee4f552c4
 # ╠═be4e263a-7f9e-11eb-3ac1-e791d0b6f87e
+# ╠═924bbaa0-7fa5-11eb-3396-1972470784d5
 # ╠═9d3fa7c2-7fa8-11eb-1cdc-517777362a3a
 # ╠═bcabefb0-7fa8-11eb-220b-4fed094e221f
 # ╠═8effea2c-7f9d-11eb-0434-99749285b842
+# ╠═36abaa90-8467-11eb-1301-fb7831fe8830
 # ╠═9237e558-7f9f-11eb-3fd2-9be5c7ebf90d
 # ╠═0d880270-7fa9-11eb-297a-3b2ce952fa33
 # ╠═1c507e92-7fa9-11eb-393a-65742f2b78ab
 # ╠═1deca260-7fa9-11eb-33a5-85ce58f5628a
 # ╠═1ed1ab30-7fa9-11eb-0f92-f7935e71b1b3
 # ╠═1f7e17ce-7fa9-11eb-3a45-7d411128e0ed
-# ╠═924bbaa0-7fa5-11eb-3396-1972470784d5
-# ╠═0013cbb0-7fa9-11eb-0bdb-4f172162bf7b
-# ╠═934005b0-7fa5-11eb-2bd9-19b44bfb001f
-# ╠═2ae53030-842d-11eb-3d6e-8b9a3e595b73
-# ╠═42377ea2-842d-11eb-1eca-8980f8a0ff0a
 # ╠═ceac869e-842d-11eb-0e88-a3566bd1f4c1
 # ╠═53bf77a0-8427-11eb-0f30-c923d76cd874
-# ╠═8914eed0-842c-11eb-328c-1b5c7f34e884
+# ╠═edb3a450-8452-11eb-0911-bf1caf847ea6
+# ╠═90190350-845f-11eb-2012-eb0a61802819
+# ╠═3e532340-8453-11eb-250e-a113554ff009
+# ╠═3b95aff0-845e-11eb-254f-5fd0c4ecdac2
+# ╠═04b712a0-8457-11eb-24cb-d7e976cc0825
 # ╠═96a2f21c-7fa0-11eb-3ae8-8563b736b30e
 # ╠═c3ca09d8-7fa0-11eb-17f8-cf753ad27443
-# ╠═a0988aa0-8425-11eb-3c2d-2306e2c20348
-# ╠═be0c46f0-7fad-11eb-1bae-7d99544cc38c
 # ╠═642873f2-7fa2-11eb-0756-55cbf93d273d
-# ╠═57856634-7fad-11eb-3036-4d6a958e57a4
-# ╠═6e8f3936-7fad-11eb-0d65-07026d17bfff
-# ╠═a1cf8518-7fa2-11eb-1783-df1ff91cda12
-# ╠═89c59ea0-7faf-11eb-294c-41e589b29f49
-# ╠═dc655d7e-7fb9-11eb-2b64-eda9e336b6cf
-# ╠═91a21d94-7faf-11eb-152e-27a5d44edf9f
-# ╠═90974550-7fd0-11eb-081a-6b1ac49e8d6c
+# ╠═c2eaa4e0-845b-11eb-1695-33032a7d2af3
+# ╠═b7623890-845b-11eb-2ec1-77feffe75f65
 # ╠═748f0ff0-7fd0-11eb-373b-a938bdb0b34c
-# ╠═a0e57710-7fd0-11eb-0b93-5f7ca5ee8824
-# ╠═6f5a5c10-7fd0-11eb-1c69-eda6306bb53b
-# ╠═cd3da630-7fc0-11eb-27a6-294fdd05674c
-# ╠═662b2f00-8423-11eb-246e-637ae0019720
+# ╠═0a6e73f0-846b-11eb-2623-bdbbd52c7343
+# ╠═90974550-7fd0-11eb-081a-6b1ac49e8d6c
+# ╠═e7ce1500-8468-11eb-2fac-31d121fabb96
 # ╠═662bcb40-8423-11eb-22c2-11bc9a628f37
 # ╠═6637d930-8423-11eb-2595-0357f562491c
-# ╠═6435c7a0-8423-11eb-3598-e96296f2c8f3
